@@ -1,4 +1,4 @@
-[![Gem Version](https://badge.fury.io/rb/facebook_ads.svg)](https://badge.fury.io/rb/facebook_ads)
+[![Gem Version](https://badge.fury.io/rb/the_trade_desk_ads.svg)](https://badge.fury.io/rb/the_trade_desk_ads)
 [![Build Status](https://travis-ci.org/tophatter/facebook-ruby-ads-sdk.svg?branch=master)](https://travis-ci.org/tophatter/facebook-ruby-ads-sdk)
 [![Coverage Status](https://coveralls.io/repos/github/tophatter/facebook-ruby-ads-sdk/badge.svg?branch=master)](https://coveralls.io/github/tophatter/facebook-ruby-ads-sdk?branch=master)
 
