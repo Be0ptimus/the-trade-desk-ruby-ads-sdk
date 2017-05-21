@@ -1,6 +1,6 @@
-[![Gem Version](https://badge.fury.io/rb/the_trade_desk_ads.svg)](https://badge.fury.io/rb/the_trade_desk_ads)
-[![Build Status](https://travis-ci.org/tophatter/facebook-ruby-ads-sdk.svg?branch=master)](https://travis-ci.org/tophatter/facebook-ruby-ads-sdk)
-[![Coverage Status](https://coveralls.io/repos/github/tophatter/facebook-ruby-ads-sdk/badge.svg?branch=master)](https://coveralls.io/github/tophatter/facebook-ruby-ads-sdk?branch=master)
+[![Gem Version](https://badge.fury.io/rb/the_trade_desk_ads.svg)](https://badge.fury.io/rb/facebook_ads)
+[![Build Status](https://travis-ci.org/Be0ptimus/the-trade-desk-ruby-ads-sdk.svg?branch=master)](https://travis-ci.org/Be0ptimus/the-trade-desk-ruby-ads-sdk)
+[![Coverage Status](https://coveralls.io/repos/github/Be0ptimus/the-trade-desk-ruby-ads-sdk/badge.svg?branch=master)](https://coveralls.io/github/Be0ptimus/the-trade-desk-ruby-ads-sdk?branch=master)
 
 # [TheTradeDesk Marketing API](https://apisb.thetradedesk.com/v3/doc) SDK for Ruby
 
