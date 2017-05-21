@@ -29,9 +29,7 @@ module TheTradeDeskAds
 
   # Note: This is the sandbox base uri
   def self.base_uri
-    unless defined?(@base_uri)
-      @base_uri = 'https://apisb.thetradedesk.com/v3/'
-    end
+    @base_uri = 'https://apisb.thetradedesk.com/v3/' unless defined?(@base_uri)
     @base_uri
   end
 

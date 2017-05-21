@@ -3,17 +3,14 @@ module TheTradeDeskAds
   # https://developers.facebook.com/docs/marketing-api/reference/ad-account
   class AdAdvertiser < Base
     FIELDS = %w[PartnerId AdvertiserId AdvertiserName Description CurrencyCode AttributionClickLookbackWindowInSeconds AttributionImpressionLookbackWindowInSeconds ClickDedupWindowInSeconds ConversionDedupWindowInSeconds DefaultRightMediaOfferTypeId IndustryCategoryId Keywords FacebookAttributes Availability LogoURL DomainAddress].freeze
-    AVAILABILITIES = %w[Available Archived]
-    SORTING_FIELDS = {"Name": "Name",
-                      "Description": "Description"}
-
+    AVAILABILITIES = %w[Available Archived].freeze
+    SORTING_FIELDS = { 'Name': 'Name',
+                       'Description': 'Description' }.freeze
 
     # advertiser = TheTradeDeskAds::AdAdvertiser.find("qckmczk")
 
     class << self
-
       # facets = TheTradeDeskAds::AdAdvertiser.facets
-
       def facets(query = {})
         get('advertiser/query/facets', query: query, objectify: false)
       end
@@ -46,15 +43,12 @@ module TheTradeDeskAds
                 "SearchTerms": search_terms,
                 "SortFields": sort_fields,
                 "PageStartIndex": page_start_index,
-                "PageSize": page_size
-               }
+                "PageSize": page_size }
       query.delete_if { |_k, v| v.nil? }
       AdAudience.post('audience/query/advertiser', query: query, objectify: true)
     end
 
-
     # has_many campaigns
-
     def ad_campaigns(effective_status: ['ACTIVE'], limit: 100)
       AdCampaign.paginate("/#{id}/campaigns", query: { effective_status: effective_status, limit: limit })
     end

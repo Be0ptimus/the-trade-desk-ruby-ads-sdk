@@ -2,13 +2,13 @@
 
 # To publish the next version:
 # gem build the_trade_desk_ads.gemspec
-# gem push the_trade_desk_ads-0.1.12.gem
+# gem push the_trade_desk_ads-0.0.1.gem
 Gem::Specification.new do |s|
   s.name        = 'the_trade_desk_ads'
   s.version     = '0.0.1'
   s.platform    = Gem::Platform::RUBY
   s.licenses    = ['MIT']
-  s.authors     = ['Alan McCann', ]
+  s.authors     = ['Alan McCann']
   s.email       = 'alan@0ptimus.com'
   s.homepage    = 'https://github.com/B30ptimus/the-trade-desk-ruby-ads-sdk'
   s.summary     = 'The Trade Desk Advertising API SDK for Ruby.'

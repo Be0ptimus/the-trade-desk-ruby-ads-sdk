@@ -2,13 +2,11 @@ module TheTradeDeskAds
   # The base class for all ads objects.
   class Base < Hashie::Mash
     class << self
-
       def auth(login: TheTradeDeskAds.login, password: TheTradeDeskAds.password, token_expiration_in_minutes: TheTradeDeskAds.token_expiration_in_minutes)
         query = { "Login": login,
-                  "Password": password
-                }
+                  "Password": password }
         if token_expiration_in_minutes && token_expiration_in_minutes.integer?
-           query["TokenExpirationInMinutes"] = token_expiration_in_minutes
+           query['TokenExpirationInMinutes'] = token_expiration_in_minutes
         end
         uri = "#{TheTradeDeskAds.base_uri}authentication"
         TheTradeDeskAds.logger.debug "POST #{uri}"
@@ -17,14 +15,11 @@ module TheTradeDeskAds
         rescue RestClient::Exception => e
           exception(:post, uri, e)
         end
-        unless e
-          TheTradeDeskAds.access_token = JSON.parse(response)["Token"]
-        end
+        TheTradeDeskAds.access_token = JSON.parse(response)['Token'] unless e
       end
 
-
       def find(id)
-        uri = "#{self.to_s.gsub("TheTradeDeskAds::Ad","").downcase}/#{id}"
+        uri = "#{to_s.gsub('TheTradeDeskAds::Ad', '').downcase}/#{id}"
         get(uri, objectify: true)
       end
 
@@ -33,19 +28,19 @@ module TheTradeDeskAds
         uri = "#{TheTradeDeskAds.base_uri}#{path}?" + build_nested_query(query)
         TheTradeDeskAds.logger.debug "GET #{uri}"
         response = begin
-          RestClient.get(uri, {"TTD-Auth": TheTradeDeskAds.access_token})
+          RestClient.get(uri, "TTD-Auth": TheTradeDeskAds.access_token)
         rescue RestClient::Exception => e
           exception(:get, path, e)
         end
         unpack(response, objectify: objectify)
       end
 
-      def post(path, query: {},objectify:)
+      def post(path, query: {}, objectify:)
         # query = pack(query, objectify: objectify)
         uri = "#{TheTradeDeskAds.base_uri}#{path}"
         TheTradeDeskAds.logger.debug "POST #{uri} #{query}"
         response = begin
-          RestClient.post(uri, query.to_json,{"TTD-Auth": TheTradeDeskAds.access_token, content_type: :json})
+          RestClient.post(uri, query.to_json, "TTD-Auth": TheTradeDeskAds.access_token, content_type: :json)
         rescue RestClient::Exception => e
           exception(:post, path, e)
         end
@@ -102,7 +97,7 @@ module TheTradeDeskAds
             value.each do |child|
               children << instantiate(child)
             end
-            object.custom_writer(key,children,false)
+            object.custom_writer(key, children, false)
           else
             object.custom_writer(key, value, false)
           end
@@ -113,8 +108,8 @@ module TheTradeDeskAds
 
       def pack(hash, objectify:)
         # hash = hash.merge(access_token: TheTradeDeskAds.access_token)
-        # hash = hash.merge(fields: self::FIELDS.join(',')) if objectify
-        # hash.delete_if { |_k, v| v.nil? }
+        hash = hash.merge(fields: self::FIELDS.join(',')) if objectify
+        hash.delete_if { |_k, v| v.nil? }
         hash
       end
 
@@ -140,14 +135,14 @@ module TheTradeDeskAds
           data.each do |datum|
             results << instantiate(datum)
           end
-          results = ApiResult.new(results: response["Result"],
-                                  result_count: response["ResultCount"],
-                                  total_filtered_count: response["TotalFilteredCount"],
-                                  total_unfiltered_count: response["TotalUnfilteredCount"])
+          results = ApiResult.new(results: response['Result'],
+                                  result_count: response['ResultCount'],
+                                  total_filtered_count: response['TotalFilteredCount'],
+                                  total_unfiltered_count: response['TotalUnfilteredCount'])
         else
           results = instantiate(response)
         end
-        return results
+        results
       end
 
       def escape(s)
