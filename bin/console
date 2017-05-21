@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'the_trade_desk_ads'
+
+begin
+  TheTradeDeskAds.login = File.read('test_login').chop
+  puts "login: #{TheTradeDeskAds.login}"
+rescue Errno::ENOENT
+  puts 'Create a test_login file and add your login to it.'
+  exit
+end
+
+begin
+  TheTradeDeskAds.password = File.read('test_password').chop
+  puts "password: #{TheTradeDeskAds.password}"
+rescue Errno::ENOENT
+  puts 'Create a test_password file and add your password to it.'
+end
+
+TheTradeDeskAds.logger = Logger.new(STDOUT)
+TheTradeDeskAds.logger.level = Logger::Severity::DEBUG
+
+require 'awesome_print'
+require 'pry'
+
+AwesomePrint.pry!
+TheTradeDeskAds::Base.auth
+if TheTradeDeskAds.access_token
+  puts "Authenticated with access token: #{TheTradeDeskAds.access_token}"
+end
+Pry.start
