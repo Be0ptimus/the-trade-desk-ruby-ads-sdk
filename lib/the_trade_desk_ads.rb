@@ -29,7 +29,13 @@ module TheTradeDeskAds
 
   # Note: This is the sandbox base uri
   def self.base_uri
-    @base_uri = 'https://apisb.thetradedesk.com/v3/' unless defined?(@base_uri)
+    if defined?(@base_uri)
+      @base_uri = @base_uri
+    elsif @sandbox
+      @base_uri = 'https://apisb.thetradedesk.com/v3/'
+    else
+      @base_uri = 'https://api.thetradedesk.com/v3/'
+    end
     @base_uri
   end
 
@@ -57,11 +63,29 @@ module TheTradeDeskAds
     @password
   end
 
+  def self.alan=(alan)
+    @alan = alan
+  end
+
+  def self.alan
+    @alan
+  end
+
+
+  def self.sandbox=(sandbox)
+    @sandbox = sandbox
+  end
+
+  def self.sandbox
+    @sandbox
+  end
+
   def self.token_expiration_in_minutes=(token_expiration_in_minutes)
     @token_expiration_in_minutes = token_expiration_in_minutes
   end
 
   def self.token_expiration_in_minutes
-    @token_expiration_in_minutes
+    @token_expiration_in_minutes || 60
   end
+
 end

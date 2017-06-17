@@ -2,7 +2,24 @@ module TheTradeDeskAds
   # An ad advertiser has many ad campaigns, ad images, and ad creatives.
   # https://developers.facebook.com/docs/marketing-api/reference/ad-account
   class AdAdvertiser < Base
-    FIELDS = %w[PartnerId AdvertiserId AdvertiserName Description CurrencyCode AttributionClickLookbackWindowInSeconds AttributionImpressionLookbackWindowInSeconds ClickDedupWindowInSeconds ConversionDedupWindowInSeconds DefaultRightMediaOfferTypeId IndustryCategoryId Keywords FacebookAttributes Availability LogoURL DomainAddress].freeze
+    FIELDS = %w[
+      PartnerId 
+      AdvertiserId 
+      AdvertiserName
+      Description
+      CurrencyCode
+      AttributionClickLookbackWindowInSeconds
+      AttributionImpressionLookbackWindowInSeconds
+      ClickDedupWindowInSeconds
+      ConversionDedupWindowInSeconds
+      DefaultRightMediaOfferTypeId
+      IndustryCategoryId
+      Keywords
+      FacebookAttributes
+      Availability
+      LogoURL
+      DomainAddress
+    ].freeze
     AVAILABILITIES = %w[Available Archived].freeze
     SORTING_FIELDS = { 'Name': 'Name',
                        'Description': 'Description' }.freeze
@@ -13,10 +30,6 @@ module TheTradeDeskAds
       # facets = TheTradeDeskAds::AdAdvertiser.facets
       def facets(query = {})
         get('advertiser/query/facets', query: query, objectify: false)
-      end
-
-      def all(query = {})
-        get('/me/adaccounts', query: query, objectify: true)
       end
 
       def find_by(conditions)
@@ -31,193 +44,216 @@ module TheTradeDeskAds
     # belongs_to partner
 
     def ad_partner
-      AdPartner.find(self.PartnerId)
+      AdPartner.new(PartnerId: self.PartnerId)
     end
 
     # has_many audiences
     # advertiser = TheTradeDeskAds::AdAdvertiser.find("qckmczk")
-    # advertiser_audiencess = advertiser.audiences
+    # advertiser_audiencess = advertiser.ad_audiences
 
-    def audiences(search_terms: nil, sort_fields: nil, page_start_index: 0, page_size: 10)
+    def ad_audiences(search_terms: nil, sort_fields: nil, page_start_index: 0, page_size: 10)
       query = { "AdvertiserId": self.AdvertiserId,
                 "SearchTerms": search_terms,
                 "SortFields": sort_fields,
                 "PageStartIndex": page_start_index,
                 "PageSize": page_size }
       query.delete_if { |_k, v| v.nil? }
-      AdAudience.post('audience/query/advertiser', query: query, objectify: true)
+      AdAudience.post('audience/query/advertiser', query: query, objectify: AdAudience)
     end
 
     # has_many campaigns
-    def ad_campaigns(effective_status: ['ACTIVE'], limit: 100)
-      AdCampaign.paginate("/#{id}/campaigns", query: { effective_status: effective_status, limit: limit })
-    end
-
-    def create_ad_campaign(name:, objective:, status: 'ACTIVE')
-      raise Exception, "Objective must be one of: #{AdCampaign::OBJECTIVES.join(', ')}" unless AdCampaign::OBJECTIVES.include?(objective)
-      raise Exception, "Status must be one of: #{AdCampaign::STATUSES.join(', ')}" unless AdCampaign::STATUSES.include?(status)
-      query = { name: name, objective: objective, status: status }
-      result = AdCampaign.post("/#{id}/campaigns", query: query)
-      AdCampaign.find(result['id'])
-    end
-
-    def create_dynamic_ad_campaign(name:, product_catalog_id:, status: 'ACTIVE')
-      raise Exception, "Status must be one of: #{AdCampaign::STATUSES.join(', ')}" unless AdCampaign::STATUSES.include?(status)
-      query = { name: name, objective: 'PRODUCT_CATALOG_SALES', status: status, promoted_object: { product_catalog_id: product_catalog_id } }
-      result = AdCampaign.post("/#{id}/campaigns", query: query)
-      AdCampaign.find(result['id'])
-    end
-
-    # has_many ad_images
-
-    def ad_images(hashes: nil, limit: 100)
-      if !hashes.nil?
-        AdImage.get("/#{id}/adimages", query: { hashes: hashes }, objectify: true)
-      else
-        AdImage.paginate("/#{id}/adimages", query: { limit: limit })
-      end
-    end
-
-    def create_ad_images(urls)
-      files = urls.map do |url|
-        name, path = download(url)
-        [name, File.open(path)]
-      end.to_h
-
-      response = AdImage.post("/#{id}/adimages", query: files)
-      files.values.each { |file| File.delete(file.path) }
-      !response['images'].nil? ? ad_images(hashes: response['images'].map { |_key, hash| hash['hash'] }) : []
+    # advertiser = TheTradeDeskAds::AdAdvertiser.find("qckmczk")
+    # advertiser_campaigns = advertiser.campaigns
+    def ad_campaigns(search_terms: nil, sort_fields: nil, page_start_index: 0, page_size: 10)
+      query = { "AdvertiserId": self.AdvertiserId,
+                "SearchTerms": search_terms,
+                "SortFields": sort_fields,
+                "PageStartIndex": page_start_index,
+                "PageSize": page_size }
+      query.delete_if { |_k, v| v.nil? }
+      AdCampaign.post('campaign/query/advertiser', query: query, objectify: AdCampaign)
     end
 
     # has_many ad_creatives
-
-    def ad_creatives(limit: 100)
-      AdCreative.paginate("/#{id}/adcreatives", query: { limit: limit })
+    # advertiser = TheTradeDeskAds::AdAdvertiser.find("qckmczk")
+    # advertiser_creatives = advertiser.creatives
+    def ad_creatives(search_terms: nil, sort_fields: nil, page_start_index: 0, page_size: 10)
+      query = { "AdvertiserId": self.AdvertiserId,
+                "SearchTerms": search_terms,
+                "SortFields": sort_fields,
+                "PageStartIndex": page_start_index,
+                "PageSize": page_size }
+      query.delete_if { |_k, v| v.nil? }
+      AdCreative.post('creative/query/advertiser', query: query, objectify: AdCreative)
     end
 
-    def create_ad_creative(creative, carousel: true)
-      carousel ? create_carousel_ad_creative(creative) : create_image_ad_creative(creative)
+
+    # has_many ad_cross_device_vendors
+    # advertiser_cross_device_vendors = advertiser.cross_device_vendors
+    def ad_cross_device_vendors(advertiser_id: nil, page_start_index: 0, page_size: nil)
+
+      AdCrossDeviceVendor.all_for_advertiser(advertiser_id: self.AdvertiserId,
+                                              page_start_index: page_start_index,
+                                              page_size: page_size)
     end
 
-    # has_many ad_sets
 
-    def ad_sets(effective_status: ['ACTIVE'], limit: 100)
-      AdSet.paginate("/#{id}/adsets", query: { effective_status: effective_status, limit: limit })
-    end
+    # def create_ad_campaign(name:, objective:, status: 'ACTIVE')
+    #   raise Exception, "Objective must be one of: #{AdCampaign::OBJECTIVES.join(', ')}" unless AdCampaign::OBJECTIVES.include?(objective)
+    #   raise Exception, "Status must be one of: #{AdCampaign::STATUSES.join(', ')}" unless AdCampaign::STATUSES.include?(status)
+    #   query = { name: name, objective: objective, status: status }
+    #   result = AdCampaign.post("/#{id}/campaigns", query: query)
+    #   AdCampaign.find(result['id'])
+    # end
 
-    # has_many ads
+    # def create_dynamic_ad_campaign(name:, product_catalog_id:, status: 'ACTIVE')
+    #   raise Exception, "Status must be one of: #{AdCampaign::STATUSES.join(', ')}" unless AdCampaign::STATUSES.include?(status)
+    #   query = { name: name, objective: 'PRODUCT_CATALOG_SALES', status: status, promoted_object: { product_catalog_id: product_catalog_id } }
+    #   result = AdCampaign.post("/#{id}/campaigns", query: query)
+    #   AdCampaign.find(result['id'])
+    # end
 
-    def ads(effective_status: ['ACTIVE'], limit: 100)
-      Ad.paginate("/#{id}/ads", query: { effective_status: effective_status, limit: limit })
-    end
+    # # has_many ad_images
 
-    # has_many ad_audiences
+    # def ad_images(hashes: nil, limit: 100)
+    #   if !hashes.nil?
+    #     AdImage.get("/#{id}/adimages", query: { hashes: hashes }, objectify: true)
+    #   else
+    #     AdImage.paginate("/#{id}/adimages", query: { limit: limit })
+    #   end
+    # end
 
-    def ad_audiences
-      AdAudience.paginate("/#{id}/customaudiences")
-    end
+    # def create_ad_images(urls)
+    #   files = urls.map do |url|
+    #     name, path = download(url)
+    #     [name, File.open(path)]
+    #   end.to_h
 
-    # has_many ad_insights
+    #   response = AdImage.post("/#{id}/adimages", query: files)
+    #   files.values.each { |file| File.delete(file.path) }
+    #   !response['images'].nil? ? ad_images(hashes: response['images'].map { |_key, hash| hash['hash'] }) : []
+    # end
 
-    def ad_insights(range: Date.today..Date.today, level: 'ad', time_increment: 1)
-      ad_campaigns.map do |ad_campaign|
-        ad_campaign.ad_insights(range: range, level: level, time_increment: time_increment)
-      end.flatten
-    end
 
-    def reach_estimate(targeting:, optimization_goal:, currency: 'USD')
-      raise Exception, "Optimization goal must be one of: #{AdSet::OPTIMIZATION_GOALS.join(', ')}" unless AdSet::OPTIMIZATION_GOALS.include?(optimization_goal)
 
-      if targeting.is_a?(AdTargeting)
-        if targeting.validate!
-          targeting = targeting.to_hash
-        else
-          raise Exception, 'The provided targeting spec is not valid.'
-        end
-      end
 
-      query = {
-        targeting_spec: targeting.to_json,
-        optimize_for: optimization_goal,
-        currency: currency
-      }
-      self.class.get("/#{id}/reachestimate", query: query, objectify: false)
-    end
+  #   def create_ad_creative(creative, carousel: true)
+  #     carousel ? create_carousel_ad_creative(creative) : create_image_ad_creative(creative)
+  #   end
 
-    # has_many applications
+  #   # has_many ad_sets
 
-    def applications
-      self.class.get("/#{id}/advertisable_applications", objectify: false)
-    end
+  #   def ad_sets(effective_status: ['ACTIVE'], limit: 100)
+  #     AdSet.paginate("/#{id}/adsets", query: { effective_status: effective_status, limit: limit })
+  #   end
 
-    # has_many ad_audiences
+  #   # has_many ads
 
-    def create_ad_audience_with_pixel(name:, pixel_id:, event_name:, subtype: 'WEBSITE', retention_days: 15)
-      query = {
-        name: name,
-        pixel_id: pixel_id,
-        subtype: subtype,
-        retention_days: retention_days,
-        rule: { event: { i_contains: event_name } }.to_json,
-        prefill: 1
-      }
+  #   def ads(effective_status: ['ACTIVE'], limit: 100)
+  #     Ad.paginate("/#{id}/ads", query: { effective_status: effective_status, limit: limit })
+  #   end
 
-      result = AdAudience.post("/#{id}/customaudiences", query: query)
-      AdAudience.find(result['id'])
-    end
+  #   # has_many ad_insights
 
-    private
+  #   def ad_insights(range: Date.today..Date.today, level: 'ad', time_increment: 1)
+  #     ad_campaigns.map do |ad_campaign|
+  #       ad_campaign.ad_insights(range: range, level: level, time_increment: time_increment)
+  #     end.flatten
+  #   end
 
-    def create_carousel_ad_creative(creative)
-      required = %i[name page_id link message assets call_to_action_type multi_share_optimized multi_share_end_card]
+  #   def reach_estimate(targeting:, optimization_goal:, currency: 'USD')
+  #     raise Exception, "Optimization goal must be one of: #{AdSet::OPTIMIZATION_GOALS.join(', ')}" unless AdSet::OPTIMIZATION_GOALS.include?(optimization_goal)
 
-      unless (keys = required - creative.keys).length.zero?
-        raise Exception, "Creative is missing the following: #{keys.join(', ')}"
-      end
+  #     if targeting.is_a?(AdTargeting)
+  #       if targeting.validate!
+  #         targeting = targeting.to_hash
+  #       else
+  #         raise Exception, 'The provided targeting spec is not valid.'
+  #       end
+  #     end
 
-      raise Exception, "Creative call_to_action_type must be one of: #{AdCreative::CALL_TO_ACTION_TYPES.join(', ')}" unless AdCreative::CALL_TO_ACTION_TYPES.include?(creative[:call_to_action_type])
+  #     query = {
+  #       targeting_spec: targeting.to_json,
+  #       optimize_for: optimization_goal,
+  #       currency: currency
+  #     }
+  #     self.class.get("/#{id}/reachestimate", query: query, objectify: false)
+  #   end
 
-      query = if creative[:product_set_id].present?
-        AdCreative.product_set(
-          name: creative[:name],
-          page_id: creative[:page_id],
-          link: creative[:link],
-          message: creative[:message],
-          headline: creative[:headline],
-          description: creative[:description],
-          product_set_id: creative[:product_set_id]
-        )
-      else
-        AdCreative.carousel(creative)
-      end
+  #   # has_many applications
 
-      result = AdCreative.post("/#{id}/adcreatives", query: query)
-      AdCreative.find(result['id'])
-    end
+  #   def applications
+  #     self.class.get("/#{id}/advertisable_applications", objectify: false)
+  #   end
 
-    def create_image_ad_creative(creative)
-      required = %i[name page_id message link link_title image_hash call_to_action_type]
+  #   # has_many ad_audiences
 
-      unless (keys = required - creative.keys).length.zero?
-        raise Exception, "Creative is missing the following: #{keys.join(', ')}"
-      end
+  #   def create_ad_audience_with_pixel(name:, pixel_id:, event_name:, subtype: 'WEBSITE', retention_days: 15)
+  #     query = {
+  #       name: name,
+  #       pixel_id: pixel_id,
+  #       subtype: subtype,
+  #       retention_days: retention_days,
+  #       rule: { event: { i_contains: event_name } }.to_json,
+  #       prefill: 1
+  #     }
 
-      raise Exception, "Creative call_to_action_type must be one of: #{AdCreative::CALL_TO_ACTION_TYPES.join(', ')}" unless AdCreative::CALL_TO_ACTION_TYPES.include?(creative[:call_to_action_type])
-      query = AdCreative.photo(creative)
-      result = AdCreative.post("/#{id}/adcreatives", query: query)
-      AdCreative.find(result['id'])
-    end
+  #     result = AdAudience.post("/#{id}/customaudiences", query: query)
+  #     AdAudience.find(result['id'])
+  #   end
 
-    def download(url)
-      pathname = Pathname.new(url)
-      name = "#{pathname.dirname.basename}.jpg"
-      # @FIXME: Need to handle exception here.
-      data = RestClient.get(url).body
-      file = File.open("/tmp/#{name}", 'w') # Assume *nix-based system.
-      file.binmode
-      file.write(data)
-      file.close
-      [name, file.path]
-    end
+  #   private
+
+  #   def create_carousel_ad_creative(creative)
+  #     required = %i[name page_id link message assets call_to_action_type multi_share_optimized multi_share_end_card]
+
+  #     unless (keys = required - creative.keys).length.zero?
+  #       raise Exception, "Creative is missing the following: #{keys.join(', ')}"
+  #     end
+
+  #     raise Exception, "Creative call_to_action_type must be one of: #{AdCreative::CALL_TO_ACTION_TYPES.join(', ')}" unless AdCreative::CALL_TO_ACTION_TYPES.include?(creative[:call_to_action_type])
+
+  #     query = if creative[:product_set_id].present?
+  #       AdCreative.product_set(
+  #         name: creative[:name],
+  #         page_id: creative[:page_id],
+  #         link: creative[:link],
+  #         message: creative[:message],
+  #         headline: creative[:headline],
+  #         description: creative[:description],
+  #         product_set_id: creative[:product_set_id]
+  #       )
+  #     else
+  #       AdCreative.carousel(creative)
+  #     end
+
+  #     result = AdCreative.post("/#{id}/adcreatives", query: query)
+  #     AdCreative.find(result['id'])
+  #   end
+
+  #   def create_image_ad_creative(creative)
+  #     required = %i[name page_id message link link_title image_hash call_to_action_type]
+
+  #     unless (keys = required - creative.keys).length.zero?
+  #       raise Exception, "Creative is missing the following: #{keys.join(', ')}"
+  #     end
+
+  #     raise Exception, "Creative call_to_action_type must be one of: #{AdCreative::CALL_TO_ACTION_TYPES.join(', ')}" unless AdCreative::CALL_TO_ACTION_TYPES.include?(creative[:call_to_action_type])
+  #     query = AdCreative.photo(creative)
+  #     result = AdCreative.post("/#{id}/adcreatives", query: query)
+  #     AdCreative.find(result['id'])
+  #   end
+
+  #   def download(url)
+  #     pathname = Pathname.new(url)
+  #     name = "#{pathname.dirname.basename}.jpg"
+  #     # @FIXME: Need to handle exception here.
+  #     data = RestClient.get(url).body
+  #     file = File.open("/tmp/#{name}", 'w') # Assume *nix-based system.
+  #     file.binmode
+  #     file.write(data)
+  #     file.close
+  #     [name, file.path]
+  #   end
   end
 end

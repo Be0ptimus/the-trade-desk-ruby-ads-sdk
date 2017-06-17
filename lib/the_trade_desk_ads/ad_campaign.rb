@@ -1,100 +1,53 @@
 module TheTradeDeskAds
-  # An ad campaign has many ad sets and belongs to an ad account.
-  # https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group
+  # An ad campaign belongs to an advertiser
+
   class AdCampaign < Base
     FIELDS = %w[
-      id
-      account_id
-      buying_type
-      can_use_spend_cap
-      configured_status
-      created_time
-      effective_status
-      name
-      objective
-      start_time
-      stop_time
-      updated_time spend_cap
+      AdvertiserId
+      CampaignId
+      CampaignName
+      Description
+      Budget
+      BudgetInImpressions
+      DailyBudget
+      DailyBudgetInImpressions
+      StartDate
+      EndDate
+      PartnerCostPercentageFee
+      PartnerCPMFee
+      CampaignConversionReportingColumns
+      Availability
+      AutoAllocatorEnabled
+      PacingMode
+      CampaignFlights
+      CreatedAtUTC
+      LastUpdatedAtUTC
     ].freeze
 
-    STATUSES = %w[
-      ACTIVE PAUSED
-      DELETED
-      PENDING_REVIEW
-      DISAPPROVED
-      PREAPPROVED
-      PENDING_BILLING_INFO
-      CAMPAIGN_PAUSED
-      ARCHIVED
-      ADSET_PAUSED
-    ].freeze
+    AVAILABILITIES = %w[Available Archived].freeze
+    PACING_MODES = %w[On Off]
+    SORTING_FIELDS = { 'Name': 'Name',
+                       'Description': 'Description' }.freeze
 
-    OBJECTIVES = %w[
-      BRAND_AWARENESS
-      CANVAS_APP_ENGAGEMENT
-      CANVAS_APP_INSTALLS
-      EVENT_RESPONSES
-      LEAD_GENERATION
-      LOCAL_AWARENESS
-      MOBILE_APP_ENGAGEMENT
-      MOBILE_APP_INSTALLS
-      NONE
-      OFFER_CLAIMS
-      PAGE_LIKES
-      POST_ENGAGEMENT
-      LINK_CLICKS
-      CONVERSIONS
-      VIDEO_VIEWS
-      PRODUCT_CATALOG_SALES
-    ].freeze
+    # belongs_to ad_advertiser
 
-    # belongs_to ad_account
-
-    def ad_account
-      @ad_account ||= AdAccount.find("act_#{account_id}")
+    def ad_advertiser
+      @ad_advertiser ||= AdAdvertiser.find(self.AdvertiserId)
     end
 
-    # has_many ad_sets
+    # belongs_to ad_campaign
 
-    def ad_sets(effective_status: ['ACTIVE'], limit: 100)
-      AdSet.paginate("/#{id}/adsets", query: { effective_status: effective_status, limit: limit })
+    def ad_campaign
+      @ad_campaign ||= AdCampaign.find(self.CampaignId)
     end
 
-    def create_ad_set(name:, promoted_object:, targeting:, daily_budget:, optimization_goal:, billing_event: 'IMPRESSIONS', status: 'ACTIVE', is_autobid: true)
-      raise Exception, "Optimization goal must be one of: #{AdSet::OPTIMIZATION_GOALS.join(', ')}" unless AdSet::OPTIMIZATION_GOALS.include?(optimization_goal)
-      raise Exception, "Billing event must be one of: #{AdSet::BILLING_EVENTS.join(', ')}" unless AdSet::BILLING_EVENTS.include?(billing_event)
 
-      if targeting.is_a?(Hash)
-        # NOP
-      else
-        targeting.validate! # Will raise if invalid.
-        targeting = targeting.to_hash
-      end
+    # has_many ad_campaign_flights
 
-      query = {
-        campaign_id: id,
-        name: name,
-        targeting: targeting.to_json,
-        promoted_object: promoted_object.to_json,
-        optimization_goal: optimization_goal,
-        daily_budget: daily_budget,
-        billing_event: billing_event,
-        status: status,
-        is_autobid: is_autobid
-      }
-      result = AdSet.post("/act_#{account_id}/adsets", query: query)
-      AdSet.find(result['id'])
+    def ad_campaign_flights
+      self.CampaignFlights.map{|flight| TheTradeDeskAds::Base.instantiate(AdCampaignFlight, flight)}
     end
 
-    # has_many ad_insights
-
-    def ad_insights(range: Date.today..Date.today, level: 'ad', time_increment: 1)
-      query = {
-        level: level,
-        time_increment: time_increment,
-        time_range: { 'since': range.first.to_s, 'until': range.last.to_s }
-      }
-      AdInsight.paginate("/#{id}/insights", query: query)
-    end
+ 
   end
 end

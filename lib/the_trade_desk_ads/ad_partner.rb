@@ -20,10 +20,10 @@ module TheTradeDeskAds
     end
 
     # has_many advertisers
-    # partner = TheTradeDeskAds::AdPartner.new(PartnerId: "ux50sgw")
+    # partner = TheTradeDeskAds::AdPartner.new(PartnerId: {partner_id})
     # partner_advertisers = partner.advertisers
 
-    def advertisers(availabilities: %w(Available Archived), search_terms: nil, sort_fields: nil, page_start_index: 0, page_size: 10)
+    def ad_advertisers(availabilities: %w(Available Archived), search_terms: nil, sort_fields: nil, page_start_index: 0, page_size: 10)
       raise Exception, 'Partner ID must be specified' unless self.PartnerId
       raise Exception, "Availabilities must be one of: #{TheTradeDeskAds::AdAdvertiser::AVAILABILITIES.join(', ')}" unless (availabilities - TheTradeDeskAds::AdAdvertiser::AVAILABILITIES).empty?
       query = { "PartnerId": self.PartnerId,
@@ -33,7 +33,7 @@ module TheTradeDeskAds
                 "PageStartIndex": page_start_index,
                 "PageSize": page_size }
       query.delete_if { |_k, v| v.nil? }
-      AdPartner.post('advertiser/query/partner', query: query, objectify: true)
+      AdPartner.post('advertiser/query/partner', query: query, objectify: TheTradeDeskAds::AdAdvertiser )
     end
   end
 end

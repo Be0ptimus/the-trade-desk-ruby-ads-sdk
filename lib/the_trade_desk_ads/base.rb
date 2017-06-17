@@ -20,7 +20,7 @@ module TheTradeDeskAds
 
       def find(id)
         uri = "#{to_s.gsub('TheTradeDeskAds::Ad', '').downcase}/#{id}"
-        get(uri, objectify: true)
+        get(uri, objectify: Object.const_get(to_s))
       end
 
       def get(path, query: {}, objectify:)
@@ -85,10 +85,10 @@ module TheTradeDeskAds
         end
       end
 
-      private
+      # private
 
-      def instantiate(hash)
-        object = new
+      def instantiate(objectify, hash)
+        object = objectify.new
         hash.each_pair do |key, value|
           # https://github.com/intridea/hashie/blob/master/lib/hashie/mash.rb#L111
           # key = '_hash' if key == 'hash'
@@ -130,17 +130,17 @@ module TheTradeDeskAds
         return response unless objectify
 
         if response.key?('Result') && (data = response['Result']).is_a?(Array)
-          data.map { |hash| instantiate(hash) }
+          # data.map { |hash| instantiate(hash) }
           results = []
           data.each do |datum|
-            results << instantiate(datum)
+            results << instantiate(objectify, datum)
           end
-          results = ApiResult.new(results: response['Result'],
+          results = ApiResult.new(results: results,
                                   result_count: response['ResultCount'],
                                   total_filtered_count: response['TotalFilteredCount'],
                                   total_unfiltered_count: response['TotalUnfilteredCount'])
         else
-          results = instantiate(response)
+          results = instantiate(objectify, response)
         end
         results
       end

@@ -5,5 +5,5 @@
 /coverage
 .DS_Store
 
-/test_login
-/test_password
+/test_login*
+/test_password*
